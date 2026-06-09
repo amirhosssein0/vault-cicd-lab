@@ -7,7 +7,7 @@ import (
     "github.com/gin-gonic/gin"
 )
 
-var version = "1.0.2"
+var version = "1.0.3"
 
 func main() {
     r := gin.Default()
@@ -27,7 +27,20 @@ func main() {
 
     r.GET("/ready", func(c *gin.Context) {
         c.JSON(http.StatusOK, gin.H{
-        "status": "ready",
+            "status": "ready",
+        })
+    })
+
+    r.GET("/secret", func(c *gin.Context) {
+        data, err := os.ReadFile("/vault/secrets/db-password")
+        if err != nil {
+            c.JSON(http.StatusOK, gin.H{
+                "secret": "secret not injected yet",
+            })
+            return
+        }
+        c.JSON(http.StatusOK, gin.H{
+            "secret": string(data),
         })
     })
 
