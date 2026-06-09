@@ -8,7 +8,7 @@ imagePullSecrets:
   - name: dockerhub
 
 configMap:
-  appEnv: develop
+  appEnv: staging
 
 service:
   port: 8080
@@ -19,14 +19,14 @@ ingress:
   className: "traefik"
   annotations: {}
   hosts:
-    - host: dev.app-chart.local
+    - host: staging.app-chart.local
       paths:
         - path: /
           pathType: Prefix
   tls:
     - secretName: app-chart-tls
       hosts:
-        - dev.app-chart.local
+        - staging.app-chart.local
 
 resources:
   limits:

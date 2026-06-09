@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: app-environments
+  namespace: argocd
+spec:
+  generators:
+  - list:
+      elements:
+      - env: dev
+        namespace: develop
+      - env: staging
+        namespace: staging
+  template:
+    metadata:
+      name: 'app-{{env}}'
+    spec:
+      project: default  
+      source:
+        repoURL: https://github.com/amirhosssein0/vault-cicd-lab
+        targetRevision: master   
+        path: helm/app-chart
+        helm:
+          valueFiles:
+          - ../../gitops/{{env}}/values.yaml
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

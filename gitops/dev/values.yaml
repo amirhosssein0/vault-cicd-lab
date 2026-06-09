@@ -1,4 +1,4 @@
-replicaCount: 1
+replicaCount: 4
 
 image:
   repository: asdfghjkl0/k8s-gitops-lab
@@ -37,7 +37,7 @@ resources:
     memory: 128Mi
 
 autoscaling:
-  enabled: true
+  enabled: false
   minReplicas: 1
   maxReplicas: 5
   targetCPUUtilizationPercentage: 60
