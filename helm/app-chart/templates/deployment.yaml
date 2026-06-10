@@ -13,9 +13,18 @@ spec:
       app: {{ .Release.Name }}
   template:
     metadata:
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "app-role"
+        vault.hashicorp.com/agent-inject-secret-db-password: "secret/data/db-password"
+        vault.hashicorp.com/agent-inject-template-db-password: |
+          {{ "{{" }}- with secret "secret/data/db-password" -{{ "}}" }}
+            {{ "{{" }} .Data.data.value {{ "}}" }}
+          {{ "{{" }}- end {{ "}}" }}
       labels:
         {{- include "app-chart.labels" . | nindent 8 }}
     spec:
+      serviceAccountName: app
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
