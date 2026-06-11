@@ -1,0 +1,44 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+    branches:
+      - master
+
+jobs:
+  update-values:
+    name: Update Helm Values
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: master
+
+      - name: Compute image tag
+        id: tag
+        run: |
+          SHA="${{ github.event.workflow_run.head_sha }}"
+          echo "value=master-${SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Update dev values
+        run: |
+          sed -i "s|tag:.*|tag: \"${{ steps.tag.outputs.value }}\"|" gitops/dev/values.yaml
+
+      - name: Update staging values
+        run: |
+          sed -i "s|tag:.*|tag: \"${{ steps.tag.outputs.value }}\"|" gitops/staging/values.yaml
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add gitops/dev/values.yaml gitops/staging/values.yaml
+          git diff --cached --quiet || git commit -m "chore: update image tag to ${{ steps.tag.outputs.value }}"
+          git push
