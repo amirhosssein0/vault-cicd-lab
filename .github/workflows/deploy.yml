@@ -27,6 +27,22 @@ jobs:
           SHA="${{ github.event.workflow_run.head_sha }}"
           echo "value=master-${SHA::7}" >> "$GITHUB_OUTPUT"
 
+      - name: Get secret from Vault
+        id: vault
+        run: |
+          SECRET=$(curl -s \
+            --header "X-Vault-Token: ${{ secrets.VAULT_TOKEN }}" \
+            ${{ secrets.VAULT_ADDR }}/v1/secret/data/db-password \
+            | jq -r '.data.data.value')
+          echo "db_password=${SECRET}" >> "$GITHUB_OUTPUT"
+
+      - name: Use secret
+        run: |
+          echo "Secret retrieved successfully"
+          echo "Value length: ${#DB_PASSWORD}"
+        env:
+          DB_PASSWORD: ${{ steps.vault.outputs.db_password }}
+
       - name: Update dev values
         run: |
           sed -i "s|tag:.*|tag: \"${{ steps.tag.outputs.value }}\"|" gitops/dev/values.yaml
